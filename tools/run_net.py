@@ -55,7 +55,8 @@ def parse_args():
         "--cfg",
         dest="cfg_file",
         help="Path to the config file",
-        default="configs/Kinetics/SLOWFAST_4x16_R50.yaml",
+        # default="configs/Kinetics/SLOWFAST_4x16_R50.yaml",
+        default="../configs/Kinetics/C2D_8x8_R50.yaml",
         type=str,
     )
     parser.add_argument(
