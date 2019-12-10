@@ -65,7 +65,7 @@ class Kinetics(torch.utils.data.Dataset):
             self._num_clips = 1
         elif self.mode in ["test"]:
             self._num_clips = (
-                cfg.TEST.NUM_ENSEMBLE_VIEWS * cfg.TEST.NUM_SPATIAL_CROPS
+                    cfg.TEST.NUM_ENSEMBLE_VIEWS * cfg.TEST.NUM_SPATIAL_CROPS
             )
 
         logger.info("Constructing Kinetics {}...".format(mode))
@@ -87,8 +87,9 @@ class Kinetics(torch.utils.data.Dataset):
         self._spatial_temporal_idx = []
         with open(path_to_file, "r") as f:
             for clip_idx, path_label in enumerate(f.read().splitlines()):
-                assert len(path_label.split()) == 2
-                path, label = path_label.split()
+                assert len(path_label.split()) == 3
+                pdb.set_trace()
+                path, _, label = path_label.split()
                 for idx in range(self._num_clips):
                     self._path_to_videos.append(
                         os.path.join(self.cfg.DATA.PATH_PREFIX, path)
@@ -97,7 +98,7 @@ class Kinetics(torch.utils.data.Dataset):
                     self._spatial_temporal_idx.append(idx)
                     self._video_meta[clip_idx * self._num_clips + idx] = {}
         assert (
-            len(self._path_to_videos) > 0
+                len(self._path_to_videos) > 0
         ), "Failed to load Kinetics split {} from {}".format(
             self._split_idx, path_to_file
         )
@@ -167,15 +168,15 @@ class Kinetics(torch.utils.data.Dataset):
             crop_size = self.cfg.DATA.TRAIN_CROP_SIZE
         elif self.mode in ["test"]:
             temporal_sample_index = (
-                self._spatial_temporal_idx[index]
-                // self.cfg.TEST.NUM_SPATIAL_CROPS
+                    self._spatial_temporal_idx[index]
+                    // self.cfg.TEST.NUM_SPATIAL_CROPS
             )
             # spatial_sample_index is in [0, 1, 2]. Corresponding to left,
             # center, or right if width is larger than height, and top, middle,
             # or bottom if height is larger than width.
             spatial_sample_index = (
-                self._spatial_temporal_idx[index]
-                % self.cfg.TEST.NUM_SPATIAL_CROPS
+                    self._spatial_temporal_idx[index]
+                    % self.cfg.TEST.NUM_SPATIAL_CROPS
             )
             min_scale, max_scale, crop_size = [self.cfg.DATA.TEST_CROP_SIZE] * 3
             # The testing is deterministic and no jitter should be performed.
@@ -257,12 +258,12 @@ class Kinetics(torch.utils.data.Dataset):
         return len(self._path_to_videos)
 
     def spatial_sampling(
-        self,
-        frames,
-        spatial_idx=-1,
-        min_scale=256,
-        max_scale=320,
-        crop_size=224,
+            self,
+            frames,
+            spatial_idx=-1,
+            min_scale=256,
+            max_scale=320,
+            crop_size=224,
     ):
         """
         Perform spatial sampling on the given video frames. If spatial_idx is
