@@ -184,6 +184,7 @@ def load_checkpoint(
         for key in caffe2_checkpoint["blobs"].keys():
             converted_key = name_convert_func(key)
             if converted_key in ms.state_dict():
+                print('@@@@@@@@@@@@@@@@@@@@@@@@@',converted_key)
                 state_dict[converted_key] = torch.tensor(
                     caffe2_checkpoint["blobs"][key]
                 ).clone()
@@ -212,6 +213,7 @@ def load_checkpoint(
         args_dataset = True
         if args_dataset:  # new dataset
             print('=> New dataset, do not load fc weights')
+
             sd = {k: v for k, v in state_dict.items() if 'fc' not in k}
         state_dict.update(sd)
         ms.load_state_dict(state_dict, strict=False)
