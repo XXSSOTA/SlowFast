@@ -183,13 +183,12 @@ def load_checkpoint(
         name_convert_func = get_name_convert_func()
         for key in caffe2_checkpoint["blobs"].keys():
             converted_key = name_convert_func(key)
+            if 'head' in converted_key:
+                continue
             if converted_key in ms.state_dict():
-                print('@@@@@@@@@@@@@@@@@@@@@@@@@',converted_key)
                 state_dict[converted_key] = torch.tensor(
                     caffe2_checkpoint["blobs"][key]
                 ).clone()
-                if caffe2_checkpoint["blobs"][key].shape != tuple(ms.state_dict()[converted_key].shape):
-                    continue
                 assert caffe2_checkpoint["blobs"][key].shape == tuple(
                     ms.state_dict()[converted_key].shape
                 ), "{}: {} does not match {}: {}".format(
