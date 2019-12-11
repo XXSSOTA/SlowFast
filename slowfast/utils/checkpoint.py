@@ -209,6 +209,11 @@ def load_checkpoint(
                 assert any(
                     prefix in key for prefix in ["momentum", "lr", "model_iter"]
                 ), "{} can not be converted".format(key)
+        args_dataset = True
+        if args_dataset:  # new dataset
+            print('=> New dataset, do not load fc weights')
+            sd = {k: v for k, v in state_dict.items() if 'fc' not in k}
+        state_dict.update(sd)
         ms.load_state_dict(state_dict, strict=False)
         epoch = 0
     else:
