@@ -188,8 +188,8 @@ def load_checkpoint(
                 state_dict[converted_key] = torch.tensor(
                     caffe2_checkpoint["blobs"][key]
                 ).clone()
-                # if caffe2_checkpoint["blobs"][key].shape != tuple(ms.state_dict()[converted_key].shape):
-                #     continue
+                if caffe2_checkpoint["blobs"][key].shape != tuple(ms.state_dict()[converted_key].shape):
+                    continue
                 assert caffe2_checkpoint["blobs"][key].shape == tuple(
                     ms.state_dict()[converted_key].shape
                 ), "{}: {} does not match {}: {}".format(
@@ -213,8 +213,7 @@ def load_checkpoint(
         args_dataset = True
         if args_dataset:  # new dataset
             print('=> New dataset, do not load fc weights')
-
-            sd = {k: v for k, v in state_dict.items() if 'fc' not in k}
+            sd = {k: v for k, v in state_dict.items() if 'head' not in k}
         state_dict.update(sd)
         ms.load_state_dict(state_dict, strict=False)
         epoch = 0
