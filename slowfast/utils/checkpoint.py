@@ -210,6 +210,10 @@ def load_checkpoint(
                 assert any(
                     prefix in key for prefix in ["momentum", "lr", "model_iter"]
                 ), "{} can not be converted".format(key)
+
+        for k, v in state_dict.items():
+            print('$$$$$$$$$$$$$$$$$$$$$$$',k)
+            print('$$$$$$$$$$$$$$$$$$$$$$$',v.shape)
         args_dataset = True
         if args_dataset:  # new dataset
             print('=> New dataset, do not load fc weights')
