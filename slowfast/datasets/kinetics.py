@@ -87,8 +87,8 @@ class Kinetics(torch.utils.data.Dataset):
         self._spatial_temporal_idx = []
         with open(path_to_file, "r") as f:
             for clip_idx, path_label in enumerate(f.read().splitlines()):
-                assert len(path_label.split()) == 3
-                path, _, label = path_label.split()
+                assert len(path_label.split()) == 2
+                path, label = path_label.split()
                 for idx in range(self._num_clips):
                     self._path_to_videos.append(
                         os.path.join(self.cfg.DATA.PATH_PREFIX, path)
