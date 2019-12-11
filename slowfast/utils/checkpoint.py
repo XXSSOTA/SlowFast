@@ -187,6 +187,8 @@ def load_checkpoint(
                 state_dict[converted_key] = torch.tensor(
                     caffe2_checkpoint["blobs"][key]
                 ).clone()
+                if caffe2_checkpoint["blobs"][key].shape != tuple(ms.state_dict()[converted_key].shape):
+                    continue
                 assert caffe2_checkpoint["blobs"][key].shape == tuple(
                     ms.state_dict()[converted_key].shape
                 ), "{}: {} does not match {}: {}".format(
