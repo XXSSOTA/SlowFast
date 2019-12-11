@@ -214,7 +214,8 @@ def train(cfg):
             cfg.NUM_GPUS > 1,
             optimizer,
             inflation=cfg.TRAIN.CHECKPOINT_INFLATE,
-            convert_from_caffe2=cfg.TRAIN.CHECKPOINT_TYPE == "caffe2",
+            convert_from_caffe2=True,
+            # convert_from_caffe2=cfg.TRAIN.CHECKPOINT_TYPE == "caffe2",
         )
         start_epoch = checkpoint_epoch + 1
     else:
