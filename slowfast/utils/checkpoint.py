@@ -215,7 +215,8 @@ def load_checkpoint(
             print('=> New dataset, do not load fc weights')
             sd = {k: v for k, v in state_dict.items() if 'head' not in k}
         state_dict.update(sd)
-        ms.load_state_dict(state_dict, strict=False)
+        # ms.load_state_dict(state_dict, strict=False)
+        ms.load_state_dict(state_dict)
         epoch = 0
     else:
         # Load the checkpoint on CPU to avoid GPU mem spike.
