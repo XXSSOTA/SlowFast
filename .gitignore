@@ -25,6 +25,7 @@ wheels/
 .installed.cfg
 *.egg
 *.jpg
+*.mp4
 *.txt
 *.pkl
 *.pth
