@@ -148,14 +148,14 @@ def eval_epoch(val_loader, model, val_meter, cur_epoch, cfg):
         val_meter.update_stats(
             top1_err, top5_err, inputs[0].size(0) * cfg.NUM_GPUS
         )
-        top1_err_avg = val_meter.log_iter_stats(cur_epoch, cur_iter)
+        val_meter.log_iter_stats(cur_epoch, cur_iter)
         val_meter.iter_tic()
 
     # Log epoch stats.
-    val_meter.log_epoch_stats(cur_epoch)
+    top1_err_min = val_meter.log_epoch_stats(cur_epoch)
     val_meter.reset()
 
-    return top1_err_avg
+    return top1_err_min
 
 
 def calculate_and_update_precise_bn(loader, model, num_iters=200):

@@ -413,3 +413,5 @@ class ValMeter(object):
             "mem": int(np.ceil(mem_usage)),
         }
         logging.log_json_stats(stats)
+
+        return self.min_top1_err
