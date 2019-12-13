@@ -47,9 +47,11 @@ def train_epoch(train_loader, model, optimizer, train_meter, cur_epoch, cfg):
         # Transfer the data to the current GPU device.
         if isinstance(inputs, (list,)):
             for i in range(len(inputs)):
-                inputs[i] = inputs[i].cuda(non_blocking=True)
+                # inputs[i] = inputs[i].cuda(non_blocking=True)
+                inputs[i] = inputs[i].cuda()
         else:
-            inputs = inputs.cuda(non_blocking=True)
+            # inputs = inputs.cuda(non_blocking=True)
+            inputs = inputs.cuda()
 
         labels = labels.cuda()
         # Update the learning rate.
@@ -69,10 +71,11 @@ def train_epoch(train_loader, model, optimizer, train_meter, cur_epoch, cfg):
         misc.check_nan_losses(loss)
 
         # Perform the backward pass.
-        optimizer.zero_grad()
+
         loss.backward()
         # Update the parameters.
         optimizer.step()
+        optimizer.zero_grad()
 
         # Compute the errors.
         num_topks_correct = metrics.topks_correct(preds, labels, (1, 5))
