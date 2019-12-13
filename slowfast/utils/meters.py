@@ -260,21 +260,21 @@ class TrainMeter(object):
         )
         eta = str(datetime.timedelta(seconds=int(eta_sec)))
         mem_usage = misc.gpu_mem_usage()
-        stats = {
-            "_type": "train_iter",
-            "epoch": "{}/{}".format(cur_epoch + 1, self._cfg.SOLVER.MAX_EPOCH),
-            "iter": "{}/{}".format(cur_iter + 1, self.epoch_iters),
-            "time_diff": self.iter_timer.seconds(),
-            "eta": eta,
-            "top1_err": self.mb_top1_err.get_win_median(),
-            "top5_err": self.mb_top5_err.get_win_median(),
-            "loss": self.loss.get_win_median(),
-            "lr": self.lr,
-            "mem": int(np.ceil(mem_usage)),
-        }
-        logging.log_json_stats(stats)
+        if cur_iter %50 == 0:
+            stats = {
+                "_type": "train_iter",
+                "epoch": "{}/{}".format(cur_epoch + 1, self._cfg.SOLVER.MAX_EPOCH),
+                "iter": "{}/{}".format(cur_iter + 1, self.epoch_iters),
+                "time_diff": self.iter_timer.seconds(),
+                "eta": eta,
+                "top1_err": self.mb_top1_err.get_win_median(),
+                "top5_err": self.mb_top5_err.get_win_median(),
+                "loss": self.loss.get_win_median(),
+                "lr": self.lr,
+                "mem": int(np.ceil(mem_usage)),
+            }
+            logging.log_json_stats(stats)
 
-        return self.mb_top1_err.get_global_avg()
 
 
     def log_epoch_stats(self, cur_epoch):

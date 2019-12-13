@@ -94,6 +94,7 @@ def train_epoch(train_loader, model, optimizer, train_meter, cur_epoch, cfg):
         train_meter.update_stats(
             top1_err, top5_err, loss, lr, inputs[0].size(0) * cfg.NUM_GPUS
         )
+
         train_meter.log_iter_stats(cur_epoch, cur_iter)
         train_meter.iter_tic()
 
@@ -261,7 +262,6 @@ def train(cfg):
             top1_err_avg = eval_epoch(val_loader, model, val_meter, cur_epoch, cfg)
             is_best = top1_err_avg < min_error
             min_error = min(top1_err_avg, min_error)
-            print('\n')
             print('>>>>>>>>>>>>min top1 error:', min_error)
             cu.save_checkpoint(cfg.OUTPUT_DIR, model, optimizer, cur_epoch, cfg, is_best)
             is_best = False
