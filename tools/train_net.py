@@ -42,8 +42,8 @@ def train_epoch(train_loader, model, optimizer, train_meter, cur_epoch, cfg):
     data_size = len(train_loader)
 
     for cur_iter, (inputs, labels, _) in enumerate(train_loader):
-        print('$$$$$$$$$$$$$$$$$$$$$$$$',inputs[0].shape)
-        print('$$$$$$$$$$$$$$$$$$$$$$$$',labels)
+        #inputs[0].shape = torch.Size([8, 3, 8, 224, 224])
+        #labels = tensor([25, 12, 32, 33, 41, 19, 16,  7])
         # Transfer the data to the current GPU device.
         if isinstance(inputs, (list,)):
             for i in range(len(inputs)):
