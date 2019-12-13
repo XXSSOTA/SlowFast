@@ -6,6 +6,8 @@ import random
 import pdb
 from io import BytesIO
 import torch
+import numpy as np
+from PIL import Image
 import torch.utils.data
 
 import slowfast.datasets.decoder as decoder
@@ -13,6 +15,7 @@ import slowfast.datasets.transform as transform
 import slowfast.datasets.video_container as container
 import slowfast.utils.logging as logging
 from slowfast.config.defaults import get_cfg
+from numpy.random import randint
 
 logger = logging.get_logger(__name__)
 
@@ -55,9 +58,12 @@ class Kinetics(torch.utils.data.Dataset):
         ], "Split '{}' not supported for Kinetics".format(mode)
         self.mode = mode
         self.cfg = cfg
-
+        self.image_tmpl = 'img_{:05d}.jpg'
         self._video_meta = {}
+        self.num_segments = self.cfg.DATA.NUM_FRAMES
         self._num_retries = num_retries
+        self.dense_sample = False
+        self.new_length = 1
         # For training or validation mode, one single clip is sampled from every
         # video. For testing, NUM_ENSEMBLE_VIEWS clips are sampled from every
         # video. For every clip, NUM_SPATIAL_CROPS is cropped spatially from
@@ -88,11 +94,11 @@ class Kinetics(torch.utils.data.Dataset):
         self._spatial_temporal_idx = []
         with open(path_to_file, "r") as f:
             for clip_idx, path_label in enumerate(f.read().splitlines()):
-                assert len(path_label.split()) == 2
-                path, label = path_label.split()
+                assert len(path_label.split()) == 3
+                path, all_num, label = path_label.split()
                 for idx in range(self._num_clips):
                     self._path_to_videos.append(
-                        os.path.join(self.cfg.DATA.PATH_PREFIX, path)
+                        path + '/---' + all_num
                     )
                     self._labels.append(int(label))
                     self._spatial_temporal_idx.append(idx)
@@ -144,6 +150,42 @@ class Kinetics(torch.utils.data.Dataset):
             )
         return frame_list
 
+    def _sample_indices(self, num_frames):
+        """
+
+        :param record: VideoRecord
+        :return: list
+        """
+        if self.dense_sample:  # i3d dense sample
+            sample_pos = max(1, 1 + num_frames - 64)
+            t_stride = 64 // self.num_segments
+            start_idx = 0 if sample_pos == 1 else np.random.randint(0, sample_pos - 1)
+            offsets = [(idx * t_stride + start_idx) % num_frames for idx in range(self.num_segments)]
+            return np.array(offsets) + 1
+        else:  # normal sample
+            average_duration = (num_frames - self.new_length + 1) // self.num_segments
+            if average_duration > 0:
+                offsets = np.multiply(list(range(self.num_segments)), average_duration) + randint(average_duration,
+                                                                                                  size=self.num_segments)
+            elif num_frames > self.num_segments:
+                offsets = np.sort(randint(num_frames - self.new_length + 1, size=self.num_segments))
+            else:
+                offsets = np.zeros((self.num_segments,))
+            return offsets + 1
+
+
+    def tsm_frames(self, video_container, NUM_FRAMES):
+        video_path, all_num = video_container.split('---')
+        end_idx = int(all_num)
+        self.num_segments = self.cfg.DATA.NUM_FRAMES
+        frame_ids = self._sample_indices(end_idx)
+        # print(frame_ids)
+        frames = [Image.open(os.path.join(video_path, self.image_tmpl.format(int(idx)))).convert('RGB') for idx in frame_ids]
+        frames = torch.as_tensor(np.stack(frames))
+        # print(frames.shape)
+
+        return frames
+
     def __getitem__(self, index):
         """
         Given the video index, return the list of frames, label, and video
@@ -192,10 +234,7 @@ class Kinetics(torch.utils.data.Dataset):
         for _ in range(self._num_retries):
             video_container = None
             try:
-                video_container = container.get_video_container(
-                    self._path_to_videos[index],
-                    self.cfg.DATA_LOADER.ENABLE_MULTI_THREAD_DECODE,
-                )
+                video_container = self._path_to_videos[index]
             except Exception as e:
                 logger.info(
                     "Failed to load video from {} with error {}".format(
@@ -208,15 +247,16 @@ class Kinetics(torch.utils.data.Dataset):
                 continue
 
             # Decode video. Meta info is used to perform selective decoding.
-            frames = decoder.decode(
-                video_container,
-                self.cfg.DATA.SAMPLING_RATE,
-                self.cfg.DATA.NUM_FRAMES,
-                temporal_sample_index,
-                self.cfg.TEST.NUM_ENSEMBLE_VIEWS,
-                video_meta=self._video_meta[index],
-                target_fps=30,
-            ) # [8,960,540,3]
+            frames = self.tsm_frames(video_container, self.cfg.DATA.NUM_FRAMES)
+            # frames = decoder.decode(
+            #     video_container,
+            #     self.cfg.DATA.SAMPLING_RATE,
+            #     self.cfg.DATA.NUM_FRAMES,
+            #     temporal_sample_index,
+            #     self.cfg.TEST.NUM_ENSEMBLE_VIEWS,
+            #     video_meta=self._video_meta[index],
+            #     target_fps=30,
+            # ) # [8,960,540,3]
 
             # If decoding failed (wrong format, video is too short, and etc),
             # select another video.
@@ -305,15 +345,15 @@ class Kinetics(torch.utils.data.Dataset):
 
 def main():
     cfg = get_cfg()
-    print(cfg)
+    # print(cfg)
     split = "train"
     drop_last = True
-    cfg.DATA.PATH_TO_DATA_DIR=''
-    cfg.TEST.NUM_ENSEMBLE_VIEWS=2
+    cfg.DATA.PATH_TO_DATA_DIR = ''
+    cfg.TEST.NUM_ENSEMBLE_VIEWS = 2
     dataset = Kinetics(cfg, split)
     train_loader = torch.utils.data.DataLoader(
         dataset,
-        batch_size=1,
+        batch_size=2,
         shuffle=False,
         num_workers=cfg.DATA_LOADER.NUM_WORKERS,
         pin_memory=cfg.DATA_LOADER.PIN_MEMORY,
@@ -324,8 +364,6 @@ def main():
         print(inputs[0].shape)
         print(inputs[1].shape)
         print(labels)
-
-
 
 
 if __name__ == '__main__':
