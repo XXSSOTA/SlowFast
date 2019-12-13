@@ -42,7 +42,7 @@ def train_epoch(train_loader, model, optimizer, train_meter, cur_epoch, cfg):
     data_size = len(train_loader)
 
     for cur_iter, (inputs, labels, _) in enumerate(train_loader):
-        print('$$$$$$$$$$$$$$$$$$$$$$$$',inputs.shape)
+        print('$$$$$$$$$$$$$$$$$$$$$$$$',inputs[0].shape)
         print('$$$$$$$$$$$$$$$$$$$$$$$$',labels)
         # Transfer the data to the current GPU device.
         if isinstance(inputs, (list,)):
