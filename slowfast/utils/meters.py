@@ -274,6 +274,9 @@ class TrainMeter(object):
         }
         logging.log_json_stats(stats)
 
+        return self.mb_top1_err.get_global_avg()
+
+
     def log_epoch_stats(self, cur_epoch):
         """
         Log the stats of the current epoch.

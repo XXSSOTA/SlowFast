@@ -88,7 +88,7 @@ def is_checkpoint_epoch(cur_epoch, checkpoint_period):
     return (cur_epoch + 1) % checkpoint_period == 0
 
 
-def save_checkpoint(path_to_job, model, optimizer, epoch, cfg):
+def save_checkpoint(path_to_job, model, optimizer, epoch, cfg, is_best):
     """
     Save a checkpoint.
     Args:
@@ -111,9 +111,16 @@ def save_checkpoint(path_to_job, model, optimizer, epoch, cfg):
         "optimizer_state": optimizer.state_dict(),
         "cfg": cfg.dump(),
     }
-    # Write the checkpoint.
-    path_to_checkpoint = get_path_to_checkpoint(path_to_job, epoch + 1)
-    torch.save(checkpoint, path_to_checkpoint)
+
+    if is_best:
+        name = "checkpoint_bast_epoch.pyth"
+        path_to_checkpoint = os.path.join(get_checkpoint_dir(path_to_job), name)
+        torch.save(checkpoint, path_to_checkpoint)
+    else:
+        # Write the checkpoint.
+        path_to_checkpoint = get_path_to_checkpoint(path_to_job, epoch + 1)
+        torch.save(checkpoint, path_to_checkpoint)
+
     return path_to_checkpoint
 
 
@@ -142,19 +149,19 @@ def inflate_weight(state_dict_2d, state_dict_3d):
             assert v2d.shape[-2:] == v3d.shape[-2:]
             assert v2d.shape[:2] == v3d.shape[:2]
             v3d = (
-                v2d.unsqueeze(2).repeat(1, 1, v3d.shape[2], 1, 1) / v3d.shape[2]
+                    v2d.unsqueeze(2).repeat(1, 1, v3d.shape[2], 1, 1) / v3d.shape[2]
             )
         state_dict_inflated[k] = v3d.clone()
     return state_dict_inflated
 
 
 def load_checkpoint(
-    path_to_checkpoint,
-    model,
-    data_parallel=True,
-    optimizer=None,
-    inflation=False,
-    convert_from_caffe2=False,
+        path_to_checkpoint,
+        model,
+        data_parallel=True,
+        optimizer=None,
+        inflation=False,
+        convert_from_caffe2=False,
 ):
     """
     Load the checkpoint from the given file. If inflation is True, inflate the
@@ -211,8 +218,8 @@ def load_checkpoint(
                 ), "{} can not be converted".format(key)
 
         for k, v in state_dict.items():
-            print('$$$$$$$$$$$$$$$$$$$$$$$',k)
-            print('$$$$$$$$$$$$$$$$$$$$$$$',v.shape)
+            print('$$$$$$$$$$$$$$$$$$$$$$$', k)
+            print('$$$$$$$$$$$$$$$$$$$$$$$', v.shape)
         args_dataset = True
         if args_dataset:  # new dataset
             print('=> New dataset, do not load fc weights')

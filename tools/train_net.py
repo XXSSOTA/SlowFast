@@ -42,8 +42,8 @@ def train_epoch(train_loader, model, optimizer, train_meter, cur_epoch, cfg):
     data_size = len(train_loader)
 
     for cur_iter, (inputs, labels, _) in enumerate(train_loader):
-        #inputs[0].shape = torch.Size([8, 3, 8, 224, 224])
-        #labels = tensor([25, 12, 32, 33, 41, 19, 16,  7])
+        # inputs[0].shape = torch.Size([8, 3, 8, 224, 224])
+        # labels = tensor([25, 12, 32, 33, 41, 19, 16,  7])
         # Transfer the data to the current GPU device.
         if isinstance(inputs, (list,)):
             for i in range(len(inputs)):
@@ -148,12 +148,14 @@ def eval_epoch(val_loader, model, val_meter, cur_epoch, cfg):
         val_meter.update_stats(
             top1_err, top5_err, inputs[0].size(0) * cfg.NUM_GPUS
         )
-        val_meter.log_iter_stats(cur_epoch, cur_iter)
+        top1_err_avg = val_meter.log_iter_stats(cur_epoch, cur_iter)
         val_meter.iter_tic()
 
     # Log epoch stats.
     val_meter.log_epoch_stats(cur_epoch)
     val_meter.reset()
+
+    return top1_err_avg
 
 
 def calculate_and_update_precise_bn(loader, model, num_iters=200):
@@ -238,6 +240,7 @@ def train(cfg):
     # Perform the training loop.
     logger.info("Start epoch: {}".format(start_epoch + 1))
 
+    max_error = 20000.0
     for cur_epoch in range(start_epoch, cfg.SOLVER.MAX_EPOCH):
         # Shuffle the dataset.
         loader.shuffle_dataset(train_loader, cur_epoch)
@@ -252,7 +255,11 @@ def train(cfg):
 
         # Save a checkpoint.
         if cu.is_checkpoint_epoch(cur_epoch, cfg.TRAIN.CHECKPOINT_PERIOD):
-            cu.save_checkpoint(cfg.OUTPUT_DIR, model, optimizer, cur_epoch, cfg)
+            cu.save_checkpoint(cfg.OUTPUT_DIR, model, optimizer, cur_epoch, cfg, is_best)
         # Evaluate the model on validation set.
         if misc.is_eval_epoch(cfg, cur_epoch):
-            eval_epoch(val_loader, model, val_meter, cur_epoch, cfg)
+            top1_err_avg = eval_epoch(val_loader, model, val_meter, cur_epoch, cfg)
+            is_best = top1_err_avg < max_error
+            max_error = min(top1_err_avg, max_error)
+            cu.save_checkpoint(cfg.OUTPUT_DIR, model, optimizer, cur_epoch, cfg, is_best)
+            is_best = False
