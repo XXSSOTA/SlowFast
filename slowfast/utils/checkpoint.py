@@ -111,17 +111,17 @@ def save_checkpoint(path_to_job, model, optimizer, epoch, cfg, is_best):
         "optimizer_state": optimizer.state_dict(),
         "cfg": cfg.dump(),
     }
+
+    path_to_checkpoint = get_path_to_checkpoint(path_to_job, epoch + 1)
     if is_checkpoint_epoch(epoch, cfg.TRAIN.CHECKPOINT_PERIOD):
         # Write the checkpoint.
-        path_to_checkpoint = get_path_to_checkpoint(path_to_job, epoch + 1)
         torch.save(checkpoint, path_to_checkpoint)
 
     if is_best:
+        # Write the checkpoint.
+        torch.save(checkpoint, path_to_checkpoint)
         name = "checkpoint_bast_epoch.pyth"
         path_to_checkpoint = os.path.join(get_checkpoint_dir(path_to_job), name)
-        torch.save(checkpoint, path_to_checkpoint)
-        # Write the checkpoint.
-        path_to_checkpoint = get_path_to_checkpoint(path_to_job, epoch + 1)
         torch.save(checkpoint, path_to_checkpoint)
 
     return path_to_checkpoint
