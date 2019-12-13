@@ -254,8 +254,10 @@ def train(cfg):
                 train_loader, model, cfg.BN.NUM_BATCHES_PRECISE
             )
 
+
         # Save a checkpoint.
         if cu.is_checkpoint_epoch(cur_epoch, cfg.TRAIN.CHECKPOINT_PERIOD):
+            is_best = False
             cu.save_checkpoint(cfg.OUTPUT_DIR, model, optimizer, cur_epoch, cfg, is_best)
         # Evaluate the model on validation set.
         if misc.is_eval_epoch(cfg, cur_epoch):
@@ -264,4 +266,3 @@ def train(cfg):
             min_error = min(top1_err_avg, min_error)
             print('>>>>>>>>>>>>min top1 error:', min_error)
             cu.save_checkpoint(cfg.OUTPUT_DIR, model, optimizer, cur_epoch, cfg, is_best)
-            is_best = False
