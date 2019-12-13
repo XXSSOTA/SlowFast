@@ -7,7 +7,8 @@ import torch
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler
 
-from slowfast.datasets.kinetics import Kinetics
+# from slowfast.datasets.kinetics import Kinetics
+from slowfast.datasets.kinetics_tsm import Kinetics
 
 # Supported datasets.
 _DATASET_CATALOG = {"kinetics": Kinetics}
