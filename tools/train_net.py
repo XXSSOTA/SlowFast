@@ -240,7 +240,7 @@ def train(cfg):
     # Perform the training loop.
     logger.info("Start epoch: {}".format(start_epoch + 1))
 
-    max_error = 20000.0
+    min_error = 20000.0
     for cur_epoch in range(start_epoch, cfg.SOLVER.MAX_EPOCH):
         # Shuffle the dataset.
         loader.shuffle_dataset(train_loader, cur_epoch)
@@ -259,7 +259,9 @@ def train(cfg):
         # Evaluate the model on validation set.
         if misc.is_eval_epoch(cfg, cur_epoch):
             top1_err_avg = eval_epoch(val_loader, model, val_meter, cur_epoch, cfg)
-            is_best = top1_err_avg < max_error
-            max_error = min(top1_err_avg, max_error)
+            is_best = top1_err_avg < min_error
+            min_error = min(top1_err_avg, min_error)
+            print('\n')
+            print('>>>>>>>>>>>>min top1 error:', min_error)
             cu.save_checkpoint(cfg.OUTPUT_DIR, model, optimizer, cur_epoch, cfg, is_best)
             is_best = False
