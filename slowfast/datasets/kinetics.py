@@ -12,6 +12,7 @@ import slowfast.datasets.decoder as decoder
 import slowfast.datasets.transform as transform
 import slowfast.datasets.video_container as container
 import slowfast.utils.logging as logging
+from slowfast.config.defaults import get_cfg
 
 logger = logging.get_logger(__name__)
 
@@ -223,6 +224,7 @@ class Kinetics(torch.utils.data.Dataset):
                 index = random.randint(0, len(self._path_to_videos) - 1)
                 continue
 
+            # inputs[0].shape = torch.Size([8, 3, 8, 224, 224])
             # Perform color normalization.
             frames = frames.float()
             frames = frames / 255.0
@@ -299,3 +301,23 @@ class Kinetics(torch.utils.data.Dataset):
             )
             frames = transform.uniform_crop(frames, crop_size, spatial_idx)
         return frames
+
+
+# def main():
+#     dataset = Kinetics(cfg, split)
+#     loader = torch.utils.data.DataLoader(
+#         dataset,
+#         batch_size=batch_size,
+#         shuffle=(False if sampler else shuffle),
+#         sampler=sampler,
+#         num_workers=cfg.DATA_LOADER.NUM_WORKERS,
+#         pin_memory=cfg.DATA_LOADER.PIN_MEMORY,
+#         drop_last=drop_last,
+#     )
+#     for cur_iter, (inputs, labels, _) in enumerate(train_loader):
+#
+#
+#
+#
+# if __name__ == '__main__':
+#     main()
